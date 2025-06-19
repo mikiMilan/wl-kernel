@@ -1,0 +1,12 @@
+[project]
+name = "wl-kernel"
+version = "0.1.0"
+description = "Tools for graph kernel similarity and fingerprint analysis"
+authors = [{ name = "Milan Predojević", email = "milanpredojevic1@gmail.com" }]
+license = {text = "Miki"}
+readme = "README.md"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
