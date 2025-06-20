@@ -1,4 +1,3 @@
-from .wl import wl_relabel_custom
-
+from .wl import graph_to_binary_vector
 
 __version__ = "0.1.0"

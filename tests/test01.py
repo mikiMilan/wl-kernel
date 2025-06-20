@@ -1,11 +1,12 @@
 import pickle
-from wl_kernel import wl_relabel_custom
-
+from wl_kernel import graph_to_binary_vector
 
 
 with open("tests/data/FVC2000_DB1_B_101_7.gpickle", "rb") as f:
-    fingerprint_graph = pickle.load(f)
+    G = pickle.load(f)
 
-    print(fingerprint_graph)
-    r = wl_relabel_custom(fingerprint_graph, node_labels=["type"])
-    print(r)
+print(G)
+
+binary_vec = graph_to_binary_vector(G, k=3, size=500)
+print(binary_vec)
+print("Broj aktivnih pozicija:", binary_vec.sum())

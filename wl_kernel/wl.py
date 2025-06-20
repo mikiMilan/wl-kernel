@@ -1,55 +1,80 @@
-import networkx as nx
-import hashlib
 import math
+import networkx as nx
+from collections import Counter
+import hashlib
+import numpy as np
+
+
+def stable_hash_bin(label, size=500):
+    """
+    Hash string label u indeks 0..(size-1) pomoću md5
+    """
+    h = hashlib.md5(label.encode('utf-8')).hexdigest()
+    return int(h, 16) % size
+
+def graph_to_binary_vector(G, k=3, size=500):
+    vec = np.zeros(size, dtype=np.uint8)
+
+    for v in G.nodes:
+        label = get_spatial_label(v, G, k=k)
+        if label == "empty" or label == "NA":
+            continue
+        idx = stable_hash_bin(label, size)
+        vec[idx] = 1
+
+    return vec
+
+def fingerprint_vector(G, k=3):
+    labels = [get_spatial_label(v, G, k=k) for v in G.nodes]
+    return Counter(labels)
 
 def euclidean(p1, p2):
-    return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+    return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
-def hash_str_to_int(s, base):
-    return int(hashlib.md5(s.encode()).hexdigest(), 16) % base
+def angle_between(p1, p2):
+    dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+    return math.degrees(math.atan2(dy, dx)) % 360
 
-def wl_relabel_custom(G: nx.Graph, h: int = 2, base: int = 200, node_labels: list = []) -> dict:
-    """
-    WL relabeling with spatial awareness and modular hashing.
-    
-    Args:
-        G: Graph with node positions: G.nodes[n]['pos'] = (x, y)
-        h: Number of iterations
-        base: Size of output label space (mod hash)
-    
-    Returns:
-        Dict: node → label (int in [0, base))
-    """
-    # Step 1: Inicijalne oznake (po modulu 2)
-    labels = {}
-    for node in G.nodes():
-        label1 = "" if len(node_labels) > 0 else G.degree[node]
-        for node_lab in node_labels:
-            label1 += str(G.nodes[node].get(node_lab))
+def quantize(value, base):
+    return round(value / base) * base
 
-        if type(label1) == str:
-            label1 = hash_str_to_int(label1, 2) + 1
-        else:
-            label1 = (label1 % 2) + 1
+def get_spatial_label(v, G, k=3, dist_bin=10, angle_bin=10):
+    if 'x' not in G.nodes[v] or 'y' not in G.nodes[v]:
+        return "NA"
 
+    x0, y0 = G.nodes[v]['x'], G.nodes[v]['y']
+    pos_v = (x0, y0)
+
+    neighbors = []
+    for u in G.neighbors(v):
+        if 'x' not in G.nodes[u] or 'y' not in G.nodes[u]:
+            continue
+        x1, y1 = G.nodes[u]['x'], G.nodes[u]['y']
+        pos_u = (x1, y1)
+        dist = euclidean(pos_v, pos_u)
+        angle = angle_between(pos_v, pos_u)
+        neighbors.append((u, dist, angle))
+
+    # Sort by score descending
+    neighbors.sort(key=lambda tup: tup[1])
+    top_k = neighbors[:k]
+
+    if not top_k:
+        return "empty"
+
+    # Bazni ugao = ugao ka prvom susjedu
+    base_angle = top_k[0][2]
+
+    parts = []
+    for i, (u, dist, angle) in enumerate(top_k):
+        rel_angle = (angle - base_angle) % 360
+        dist_q = quantize(dist, dist_bin)
         
-        labels[node] = [label1, None]
+        if i == 0:
+            parts.append(f"{int(dist_q / 10)}")  # bez ugla
+        else:
+            angle_q = quantize(rel_angle, angle_bin)
+            parts.append(f"{int(dist_q / 10)}:{int(angle_q / 10)}")
 
-    
-    '''
-    # Step 2: Iteracije
-    for i in range(h):
-        new_labels = {}
-        for node in G.nodes():
-            center = G.nodes[node].get("pos", (0, 0))
-            neighbors = list(G.neighbors(node))
-            # sortiranje po udaljenosti
-            neighbors.sort(key=lambda n: euclidean(center, G.nodes[n].get("pos", (0, 0))))
-            # konstruisanje stringa
-            neighbor_labels = [str(labels[n]) for n in neighbors]
-            s = f"{labels[node]}|" + "|".join(neighbor_labels)
-            # hash mod base
-            new_labels[node] = hash_str_to_int(s, base)
-        labels = new_labels  # ažuriranje
-    '''
-    return labels
+    label = "|".join(parts)
+    return label
