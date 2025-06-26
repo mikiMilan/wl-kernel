@@ -18,18 +18,10 @@ class WLkernel:
         """
         h = hashlib.md5(label.encode('utf-8')).hexdigest()
         return int(h, 16) % self.size
+    
+    def stable_hash2(self, label):
+        return int(hashlib.sha256(label.encode()).hexdigest(), 16) % self.size
 
-    def graph_to_binary_vector(self):
-        vec = np.zeros(self.size, dtype=np.uint8)
-
-        for v in self.G.nodes:
-            label = self.get_spatial_label(v)
-            if label == "empty" or label == "NA":
-                continue
-            idx = self.stable_hash(label)
-            vec[idx] = 1
-
-        return vec
 
     def graph_to_frequency_vector(self):
         vec = np.zeros(self.size, dtype=np.uint8)
@@ -83,6 +75,18 @@ class WLkernel:
 
         label = "|".join(parts)
         return label
+    
+    # def graph_to_binary_vector(self):
+    #     vec = np.zeros(self.size, dtype=np.uint8)
+
+    #     for v in self.G.nodes:
+    #         label = self.get_spatial_label(v)
+    #         if label == "empty" or label == "NA":
+    #             continue
+    #         idx = self.stable_hash(label)
+    #         vec[idx] = 1
+
+    #     return vec
 
 
 def euclidean(p1, p2):
