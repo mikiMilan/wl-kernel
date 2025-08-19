@@ -192,3 +192,14 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+tests/data/graph_dataset/*
+!tests/data/graph_dataset/G_1000_0.1_orig.gpickle
+!tests/data/graph_dataset/G_1000_0.1_mod_100.gpickle
+!tests/data/graph_dataset/G_1000_0.1_mod_50.gpickle
+
+tests/data/small_graph_dataset/*
+!tests/data/small_graph_dataset/G_50_0.1_0_orig.gpickle
+!tests/data/small_graph_dataset/G_50_0.1_0_mod_15.gpickle
+!tests/data/small_graph_dataset/G_50_0.1_0_mod_10.gpickle
+!tests/data/small_graph_dataset/G_50_0.1_0_mod_5.gpickle
