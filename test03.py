@@ -16,7 +16,7 @@ kernel2 = WLkernel(G2, size=100024)
 
 # Dobij vektore
 vec1 = kernel1.degree_vector(iter=1)
-print(vec1)
+# print(vec1)
 vec2 = kernel2.degree_vector(iter=1)
 # print(vec1)
 
